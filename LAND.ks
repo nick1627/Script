@@ -1,0 +1,71 @@
+//this is the landing script.  It lands the vessel at a particular longitude on the surface of the body of choice.
+
+PARAMETER BODYNAME.
+PARAMETER TARGETWAYPOINT.
+
+//initial checks.  Body should not have atmosphere (this should be dealt with at a later date)
+//body being orbited currently should match the body we are given
+
+if SHIP:BODY != BODYNAME or SHIP:BODY:ATM:EXISTS = TRUE{
+  PRINT "CANNOT LAND AUTOMATICALLY.".
+}else{
+  PRINT "COMMENCING LANDING...".
+
+  SET BODYMASS TO SHIP:BODY:MASS.
+  SET BODYRADIUS TO SHIP:BODY:RADIUS.
+  SET SURFGRAV TO (G*BODYMASS)/BODYRADIUS.
+
+
+  //DO FIRST BURN THAT TAKES YOU ON PATH OVER TARGET
+
+  //DO SECOND BURN TO REDUCE HORIZONTAL VELOCITY TO ZERO
+
+
+  SAS on.
+
+  LOCK THROTTLE TO THROT.
+
+  SET SASMODE TO "RETROGRADE".
+  UNTIL SHIP:GROUNDSPEED <= 3{
+    LOCK THROT TO 1.
+  }
+  LOCK THROT TO 0.
+
+  WAIT 1.
+
+  SAS OFF.
+
+  //DO FINAL LANDING BURN
+
+  LOCK STEERING TO HEADING(90, 90).
+
+  SET THROT TO 0.
+  GEAR ON.
+
+  WAIT UNTIL SHIP:VERTICALSPEED < 0.
+  WAIT 1.
+  SET K2 TO 0.5*SHIP:MASS*SHIP:VERTICALSPEED*SHIP:VERTICALSPEED.
+  SET Y2 TO ALT:RADAR.
+  SET G2 TO SHIP:MASS*GRAVITY*Y2.
+  SET Y1 TO (K2 + G2)/(SHIP:MAXTHRUST).
+  PRINT "WILL BURN AT:  " + Y1 + "METRES.".
+
+  WAIT UNTIL ALT:RADAR <= (Y1).
+  PRINT "BURNING".
+  SET THROT TO 1.
+  WAIT UNTIL SHIP:VERTICALSPEED >= -3.
+  set throt to (ship:mass*GRAVITY/ship:maxthrust).
+  wait until alt:radar <= (Y0 + 0.1).
+  SET THROT TO 0.
+  wait 1.
+  lock throttle to 0.
+  wait 5.
+  UNLOCK THROTTLE.
+  SET THROTTLE TO 0.
+  WAIT 5.
+  LOCK THROTTLE TO 0.
+  UNLOCK THROTTLE.
+  WAIT 5.
+
+
+}

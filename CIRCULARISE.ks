@@ -1,0 +1,99 @@
+//script to circularise.
+//Assumes starting from orbit.
+PARAMETER CIRCALT.  //the altitude of the circular orbit we wish to achieve.
+
+LOCAL BURNS IS 0.
+LOCAL V1 IS 0.
+LOCAL V2 IS 0.
+LOCAL E IS 0.
+LOCAL DELTAV IS 0.
+
+LOCAL SKIPPE IS FALSE.
+LOCAL SKIPAP IS FALSE.
+LOCAL SKIPBURN IS FALSE.
+
+IF CLOSETO(SHIP:APOAPSIS, CIRCALT, 5000){
+    SET SKIPPE TO TRUE.
+}
+
+IF CLOSETO(SHIP:PERIAPSIS, CIRCALT, 5000){
+   SET SKIPAP TO TRUE.
+}
+
+UNTIL BURNS = 2{
+    IF ETA:APOAPSIS < ETA:PERIAPSIS{
+        IF SKIPAP = FALSE{
+            //BURN AT APOAPSIS
+
+
+            //CALCULATE VELOCITY AT APOAPSIS
+            SET V1 TO VELOCITYAT(SHIP,(TIME + ETA:APOAPSIS)):ORBIT:MAG.
+
+            //CALCULATE ECCENTRICITY OF TRANSFER ORBIT:
+            SET E TO GETECCENTRICITY(CIRCALT, SHIP:APOAPSIS).
+
+            //CALCULATE FINAL VELOCITY AT CURRENT POSITION
+            IF CIRCALT > SHIP:APOAPSIS{
+                //APOAPSIS WILL BECOME PERIAPSIS, SO NEED (1+E)
+                SET V2 TO SQRT(((1 + E)*CONSTANT:G*KERBIN:MASS)/(KERBIN:RADIUS + SHIP:APOAPSIS)).
+            }
+            IF CIRCALT < SHIP:APOAPSIS{
+                //APOAPSIS WILL REMAIN APOAPSIS, SO NEED (1-E)
+                SET V2 TO SQRT(((1 - E)*CONSTANT:G*KERBIN:MASS)/(KERBIN:RADIUS + SHIP:APOAPSIS)).
+            }
+
+            //CALCULATE DELTA-V.
+            SET DELTAV TO V2 - V1.
+
+            SET M TO NODE(TIME:SECONDS + ETA:APOAPSIS, 0, 0, DELTAV).
+        }ELSE{
+            SET SKIPBURN TO TRUE.
+        }
+
+    }ELSE IF ETA:PERIAPSIS < ETA:APOAPSIS{
+        IF SKIPPE = FALSE{
+            //BURN AT PERIAPSIS
+
+            //CALCULATE VELOCITY AT PERIAPSIS
+            SET V1 TO VELOCITYAT(SHIP,(TIME + ETA:PERIAPSIS)):ORBIT:MAG.
+
+            //CALCULATE ECCENTRICITY OF TRANSFER ORBIT:
+            SET E TO GETECCENTRICITY(CIRCALT, SHIP:PERIAPSIS).
+
+            //CALCULATE FINAL VELOCITY AT CURRENT POSITION
+            IF CIRCALT > SHIP:PERIAPSIS{
+                //PERIAPSIS REMAINS PERIAPSIS, PHI IS 0 SO WE GET (1+E)
+                SET V2 TO SQRT(((1 + E)*CONSTANT:G*KERBIN:MASS)/(KERBIN:RADIUS + SHIP:PERIAPSIS)).
+            }
+            IF CIRCALT < SHIP:PERIAPSIS{
+                //PERIAPSIS BECOMES APOAPSIS SO (1-E)
+                SET V2 TO SQRT(((1 - E)*CONSTANT:G*KERBIN:MASS)/(KERBIN:RADIUS + SHIP:PERIAPSIS)).
+            }
+
+            //CALCULATE DELTA-V.
+            SET DELTAV TO V2 - V1.
+
+            SET M TO NODE(TIME:SECONDS + ETA:PERIAPSIS, 0, 0, DELTAV).
+        }ELSE{
+            SET SKIPBURN TO TRUE.
+        }
+    }
+
+    IF SKIPBURN = FALSE{
+        ADD M.
+        WAIT 1.
+
+        //warp to manoeuvre function?
+        WARPTOMANOEUVRE(M).
+
+        //now perform the manoeuvre
+        EXECUTEMANOEUVRE(M).
+
+        WAIT 1.
+        REMOVE M.
+        WAIT 1.
+    }
+
+    SET BURNS TO BURNS + 1.
+    SET SKIPBURN TO FALSE.
+}

@@ -86,7 +86,7 @@ FUNCTION EXECUTEMANOEUVRE{
     LOCK STEERING TO MANOEUVREDIRECTION.
 
     LOCAL STAGEREQUIRED IS FALSE.
-    IF M1:DElTAV:MAG > GETCURRENTSTAGEDELTAV(){
+    IF M1:DElTAV:MAG > GETCURRENTSTAGEDELTAV(){ //NEED TO FIX SOMETHING WEIRD HAPPENING HERE.
         SET STAGEREQUIRED TO TRUE.
     }
 
@@ -306,4 +306,34 @@ function Hohmann{
     }else{
         print "No need for Hohmann transfer.".
     }
+    //I think this function should just return the manoeuvres and not actually perform them.  This should be done 
+    //in the main script.
+}
+
+function GetDeltaVForDiffPeriod{
+    parameter Gamma.  //the fraction of your current period that you want the new period to be 
+    //assumes starting from a circular orbit
+    //assumes doing burn at periapsis
+
+    parameter BodyName.
+    parameter Apsis.
+
+
+    local G is constant:G.
+    local M is body(BodyName):Mass.
+
+    if Apsis = "periapsis"{
+        set r1 to GetRadius(BodyName, ship:periapsis).
+    }else{
+        set r1 to GetRadius(BodyName, ship:apoapsis).
+    }
+    set r1 to GetRadius(BodyName, ship:periapsis).
+
+    local v1 is sqrt(G*M/r1).
+    local v2 is sqrt((G*M/r1)*(2 - (1/((Gamma^2)^(1/3))))).
+    local DeltaV is v2 - v1.
+
+    //set M1 to node(time:seconds + eta:periapsis, 0, 0, DeltaV).
+
+    return DeltaV.
 }

@@ -2,9 +2,11 @@
 
 FUNCTION GETECCENTRICITY{
     //function to calculate the eccentricity of an orbit given the apoapsis and periapsis.
-    //EXPECTING TWO ALTITUDES (NOT INCLUDING KERBIN RADIUS)
+    //EXPECTING TWO ALTITUDES (NOT INCLUDING CELESTIAL BODY RADIUS)
     PARAMETER R1.
     PARAMETER R2.
+    //PARAMETER BODYNAME.  NICK FIX THISSSS!!!!!
+
     IF R1 < R2{
         SET PE TO R1.
         SET AP TO R2.
@@ -56,7 +58,8 @@ FUNCTION GETFINISHTIME{
 
 
 FUNCTION WARPTOMANOEUVRE{
-    PARAMETER NODE.
+    PARAMETER M1.
+
     SET WARPMODE TO "RAILS".
     WARPTO(TIME:SECONDS + M1:ETA - 60).
 }
@@ -104,7 +107,7 @@ FUNCTION EXECUTEMANOEUVRE{
 
     LOCK THROTTLE TO THROT.
     SET TIMELEFT TO GETBURNTIME(M1:DELTAV:MAG, ISP, THRUST, THROT).
-    UNTIL (M1:DELTAV:MAG<0.2) OR (TIMELEFT < 0.1){//TIME:SECONDS >= GETFINISHTIME(M1:DELTAV:MAG, ISP, THRUST, THROT){
+    UNTIL (M1:DELTAV:MAG<0.1) OR (TIMELEFT < 0.1){//TIME:SECONDS >= GETFINISHTIME(M1:DELTAV:MAG, ISP, THRUST, THROT){
         SET TIMELEFT TO GETBURNTIME(M1:DELTAV:MAG, ISP, THRUST, THROT).
 
         IF STAGEREQUIRED{
@@ -139,6 +142,8 @@ FUNCTION EXECUTEMANOEUVRE{
     SAS ON.
     WAIT 5.
     SAS OFF.
+
+    remove M1.
 
     //STAGES EVEN IF THERE ISN'T AN ENGINE ON THE NEXT STAGE.  WE SHOULD CHECK THAT FIRST.
 }
@@ -245,4 +250,60 @@ Function Land{
   //commencing deorbit burn
   //commencing horizontal velocity cancelling burn
   //commencing landing burn
+}
+
+function GetRadius{
+    parameter BodyName.
+    parameter Alt.
+
+    return Body(BodyName):radius + Alt.
+}
+
+function Hohmann{
+    parameter InitialAlt.
+    parameter FinalAlt.
+    parameter BodyName.
+
+    local r1 is GetRadius(BodyName, InitialAlt).
+    local r2 is GetRadius(BodyName, FinalAlt).
+    local G is Constant:G.
+    local M is Body(BodyName):Mass.
+    //assumes you are in a circular orbit
+    local e is GetEccentricity(InitialAlt, FinalAlt).
+    local V1 is sqrt((G*M)/r1).
+
+    if InitialAlt > FinalAlt{
+        local V2 is sqrt((G*M*(1 - e))/r1).
+        local DeltaV is V2 - V1.
+        SET FirstManoeuvre TO NODE(TIME:SECONDS + ETA:PERIAPSIS, 0, 0, DeltaV).
+        ADD FirstManoeuvre.
+        //should warp for a bit maybe
+        EXECUTEMANOEUVRE(FirstManoeuvre).
+
+        set V1 to sqrt(G*M*(1+e)/r2).
+        set V2 to sqrt(G*M/r2).
+        set DeltaV to V2 - V1.
+        set SecondManoeuvre to node(time:seconds + eta:periapsis, 0, 0, DeltaV).
+
+        EXECUTEMANOEUVRE(SecondManoeuvre).
+
+    }else if FinalAlt > InitialAlt{
+        local V2 is sqrt((G*M*(1 + e))/r1).
+        local DeltaV is V2 - V1.
+        SET FirstManoeuvre TO NODE(TIME:SECONDS + ETA:PERIAPSIS, 0, 0, DeltaV).
+        ADD FirstManoeuvre.
+
+        EXECUTEMANOEUVRE(FirstManoeuvre).
+
+        set V1 to sqrt(G*M*(1-e)/r2).
+        set V2 to sqrt(G*M/r2).
+        set DeltaV to V2 - V1.
+        set SecondManoeuvre to node(time:seconds + eta:apoapsis, 0, 0, DeltaV).
+        add SecondManoeuvre.
+
+        EXECUTEMANOEUVRE(SecondManoeuvre).
+
+    }else{
+        print "No need for Hohmann transfer.".
+    }
 }

@@ -51,13 +51,13 @@ FUNCTION CHECKSTAGEREQUIRED{
 
 FUNCTION GETCURRENTSTAGEDELTAV{//THis function needs fixing!!! not dealing with resources properly I think
     //FIND THE DELTA V OF THE CURRENT STAGE.
-    LOCAL RESLIST IS STAGE:RESOURCES.
-    print stage:resources.
+    //LOCAL RESLIST IS STAGE:RESOURCES.
+    //print stage:resources.
     wait 1.
     LOCAL AMOUNTOFFUEL IS 0.
-    FOR RES IN RESLIST{
-        SET AMOUNTOFFUEL TO AMOUNTOFFUEL + RES:AMOUNT.
-    }
+    //FOR RES IN RESLIST{
+    SET AMOUNTOFFUEL TO AMOUNTOFFUEL + STAGE:LIQUIDFUEL + STAGE:OXIDIZER.
+    //}
     LOCAL MASSOFFUEL IS AMOUNTOFFUEL * 5.
     LOCAL CURRENTISP IS GETISPOFCURRENTENGINES().
 
@@ -70,6 +70,11 @@ FUNCTION GETDELTAV{
     PARAMETER ISP1.
     PARAMETER Mass0.
     PARAMETER Mass1.
+
+    print "Mass0 in kg".
+    print Mass0.
+    print "Mass1 in kg".
+    print Mass1.
 
     RETURN ISP1 * 9.81 * LN(Mass0/Mass1).
 }

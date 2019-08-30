@@ -8,12 +8,12 @@ FUNCTION GETECCENTRICITY{
     //PARAMETER BODYNAME.  NICK FIX THISSSS!!!!!
 
     IF R1 < R2{
-        SET PE TO R1.
-        SET AP TO R2.
+        local PE is R1.
+        local AP is R2.
     }
     IF R1 > R2{
-        SET PE TO R2.
-        SET AP TO R1.
+        local PE is R2.
+        local AP is R1.
     }
     IF R1 = R2{
         RETURN 0.
@@ -60,8 +60,17 @@ FUNCTION GETFINISHTIME{
 FUNCTION WARPTOMANOEUVRE{
     PARAMETER M1.
 
+    //Find burn time
+    LOCAL ISP IS GETISPOFCURRENTENGINES().
+    LOCAL THRUST IS GETCURRENTMAXTHRUST().
+
+    LOCAL THROT IS 1.
+    //burntime comes out different to what game says because game estimates.
+    LOCAL BURNTIME IS GETBURNTIME(M1:DElTAV:MAG, ISP, THRUST, THROT).
+
+
     SET WARPMODE TO "RAILS".
-    WARPTO(TIME:SECONDS + M1:ETA - 60).
+    WARPTO(TIME:SECONDS + M1:ETA - 60 - (BURNTIME/2)).
 }
 
 
@@ -330,7 +339,7 @@ function GetDeltaVForDiffPeriod{
     }else{
         set r1 to GetRadius(BodyName, ship:apoapsis).
     }
-    set r1 to GetRadius(BodyName, ship:periapsis).
+    set r1 to GetRadius(BodyName, ship:periapsis). //what?!
 
     local v1 is sqrt(G*M/r1).
     local v2 is sqrt((G*M/r1)*(2 - (1/((Gamma^2)^(1/3))))).
@@ -339,4 +348,66 @@ function GetDeltaVForDiffPeriod{
     //set M1 to node(time:seconds + eta:periapsis, 0, 0, DeltaV).
 
     return DeltaV.
+}
+
+function GetSemimajorAxis{
+    //takes arguments that do NOT include radius of body.
+    //the arguments should be altitudes.
+    local parameter Ap.
+    parameter Pe.
+    parameter BodyName.
+
+    set Ap to GetRadius(BodyName, Ap).
+    set Pe to GetRadius(BodyName, Pe).
+
+    return (Ap + Pe)/2.
+}
+
+function ChangeApOrPe{
+    parameter ApOrPe. //string saying whether it's the apoapsis that's changing or the periapsis
+    parameter NewAlt. //new altitude of above thing
+
+    local G is constant:G.
+    local BodyName is SHIP:BODY:NAME.
+    local M is body(BodyName):Mass.
+
+    if ApOrPe = "APOAPSIS"{
+        //must perform manoeuvre at periapsis
+        local V1 is VELOCITYAT(SHIP,(TIME + ETA:PERIAPSIS)):ORBIT:MAG.
+
+        local a is GetSemimajorAxis(NewAlt, ship:periapsis, BodyName).
+
+        local V2 is sqrt(G*M*(2/ship:periapsis - 1/a)).
+
+        local DeltaV is V2 - V1.
+
+        local M1 is NODE(TIME:SECONDS + ETA:PERIAPSIS, 0, 0, DeltaV).
+
+        Add M1.
+
+        WARPTOMANOEUVRE(M1).
+        EXECUTEMANOEUVRE(M1).
+    
+    }else if ApOrPe = "PERIAPSIS"{
+        //must perform manoeuvre at apoapsis
+        local V1 is VELOCITYAT(SHIP,(TIME + ETA:APOAPSIS)):ORBIT:MAG.
+
+        local a is GetSemimajorAxis(ship:apoapsis, NewAlt, BodyName).
+
+        local V2 is sqrt(G*M*(2/ship:apoapsis - 1/a)).
+
+        local DeltaV is V2 - V1.
+
+        local M1 is NODE(TIME:SECONDS + ETA:APOAPSIS, 0, 0, DeltaV).
+
+        Add M1.
+
+        WARPTOMANOEUVRE(M1).
+        EXECUTEMANOEUVRE(M1).
+
+    }else{
+        print "ERROR:  APOAPSIS OR PERIAPSIS MUST BE SPECIFIED.".
+    }
+    
+    return.
 }

@@ -71,10 +71,10 @@ FUNCTION GETDELTAV{
     PARAMETER Mass0.
     PARAMETER Mass1.
 
-    print "Mass0 in kg".
-    print Mass0.
-    print "Mass1 in kg".
-    print Mass1.
+    // print "Mass0 in kg".
+    // print Mass0.
+    // print "Mass1 in kg".
+    // print Mass1.
 
     RETURN ISP1 * 9.81 * LN(Mass0/Mass1).
 }

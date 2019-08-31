@@ -152,7 +152,7 @@ FUNCTION EXECUTEMANOEUVRE{
     SAS ON.
     SET THROTTLE TO 0.0.
     Wait 1.
-    WAIT 5.
+    //WAIT 5.
     SAS OFF.
 
     remove M1.
@@ -219,7 +219,7 @@ FUNCTION ABORTNOW{
             }
 
             UNTIL CHUTES{
-                CHUTESAFE ON.
+                chutesSafe ON.
             }
 
             PRINT "PARACHUTES DEPLOYED".
@@ -237,31 +237,31 @@ Function abort{
 }
 
 Function MonitorForManoeuvres{
-  PARAMETER N. //number of manoeuvres to monitor for.
+    PARAMETER N. //number of manoeuvres to monitor for.
 
-  LOCAL STOP IS FALSE.
+    LOCAL STOP IS FALSE.
 
-  UNTIL (STOP OR N <=0){
-      LOCAL CHAR IS GETVALIDINPUT(FALSE, "TO WARP TO THE NEXT MANOEUVRE, PRESS W.  PRESS E TO EXIT THE LOOP.", LIST("W", "E"), "ENTER W OR E ONLY.").
-      IF CHAR = "W"{
-          IF HASNODE{
-              SET M1 TO NEXTNODE.
-              WARPTOMANOEUVRE(M1).
-              EXECUTEMANOEUVRE(M1).
-              SET N TO N-1.
-          }
-      }
-      IF CHAR = "E"{
-          SET STOP TO TRUE.
-      }
-  }
+    UNTIL (STOP OR N <=0){
+        LOCAL CHAR IS GETVALIDINPUT(FALSE, "TO WARP TO THE NEXT MANOEUVRE, PRESS W.  PRESS E TO EXIT THE LOOP.", LIST("W", "E"), "ENTER W OR E ONLY.").
+        IF CHAR = "W"{
+            IF HASNODE{
+                SET M1 TO NEXTNODE.
+                WARPTOMANOEUVRE(M1).
+                EXECUTEMANOEUVRE(M1).
+                SET N TO N-1.
+            }
+        }
+        IF CHAR = "E"{
+            SET STOP TO TRUE.
+        }
+    }
 }
 
 Function Land{
-  PARAMETER TARGETWAYPOINT.
-  //commencing deorbit burn
-  //commencing horizontal velocity cancelling burn
-  //commencing landing burn
+    PARAMETER TARGETWAYPOINT.
+    //commencing deorbit burn
+    //commencing horizontal velocity cancelling burn
+    //commencing landing burn
 }
 
 function GetRadius{
@@ -377,7 +377,7 @@ function ChangeApOrPe{
 
         local a is GetSemimajorAxis(NewAlt, ship:periapsis, BodyName).
 
-        local V2 is sqrt(G*M*(2/ship:periapsis - 1/a)).
+        local V2 is sqrt(G*M*((2/GetRadius(BodyName, ship:periapsis)) - 1/a)).
 
         local DeltaV is V2 - V1.
 
@@ -394,7 +394,7 @@ function ChangeApOrPe{
 
         local a is GetSemimajorAxis(ship:apoapsis, NewAlt, BodyName).
 
-        local V2 is sqrt(G*M*(2/ship:apoapsis - 1/a)).
+        local V2 is sqrt(G*M*((2/GetRadius(BodyName, ship:apoapsis)) - 1/a)).
 
         local DeltaV is V2 - V1.
 
@@ -410,4 +410,14 @@ function ChangeApOrPe{
     }
     
     return.
+}
+
+function ChangeInclination{
+    //assumes zero inclination to start with.
+    parameter NewOmega.//new longitude of ascending node
+    parameter Newi.//new inclination
+
+
+
+
 }

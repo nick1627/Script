@@ -9,4 +9,4 @@ AG1 ON.
 
 MONITORFORMANOEUVRES(10000).
 
-//ChangeApOrPe("Apoapsis", 100000). //code is broken, maths is wrong.
+//ChangeApOrPe("Apoapsis", 100000). 

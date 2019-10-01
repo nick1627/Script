@@ -8,7 +8,7 @@ local VKi is 0.001.
 local VKd is 0.009.
 
 local TARGETALT is 500.
-local TARGETVEL IS -5.
+local TARGETVEL is -5.
 
 clearscreen.
 print "TESTING HOVER SCRIPT".

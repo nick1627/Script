@@ -1,6 +1,9 @@
 //minmus landing mission.
 CLEARSCREEN.
 
+wait 2.
+local Y0 is ALT:RADAR.
+
 IF SHIP:STATUS = "PRELAUNCH"{
   RUN LAUNCH(80000).
 }
@@ -75,7 +78,7 @@ PRINT "BURNING".
 SET THROT TO 1.
 WAIT UNTIL SHIP:VERTICALSPEED >= -3.
 set throt to (ship:mass*GRAVITY/ship:maxthrust).
-wait until alt:radar <= (Y0 + 0.1).
+wait until alt:radar <= (Y0 + 1).
 SET THROT TO 0.
 wait 1.
 lock throttle to 0.

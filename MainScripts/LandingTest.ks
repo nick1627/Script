@@ -1,0 +1,25 @@
+//assume manual piloting to altitude of interest
+CLEARSCREEN.
+
+wait 5.
+
+
+
+LOCAL STOP IS FALSE.
+LOCAL SHIPHEIGHT IS alt:radar.
+
+PRINT "PILOT THE VESSEL UNTIL READY FOR LANDING.".
+
+UNTIL (STOP OR (SHIP:STATUS = "LANDED")){
+    LOCAL CHAR IS GETVALIDINPUT(FALSE, "ENTER L WHEN READY TO LAND, OR E TO EXIT THE LOOP.", LIST("L", "E"), "ENTER L OR E ONLY.").
+    IF CHAR = "L"{
+        RUN LAND("KERBIN", "NULL", SHIPHEIGHT).
+    }
+    IF CHAR = "E"{
+        SET STOP TO TRUE.
+    }
+}
+
+PRINT "LANDING COMPLETE.".
+
+

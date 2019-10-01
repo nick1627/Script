@@ -38,3 +38,4 @@ SET THROT TO 0.
 wait 1.
 lock throttle to 0.
 wait 5.
+SET THROTTLE TO 0.

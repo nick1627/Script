@@ -1,0 +1,4 @@
+CLEARSCREEN.
+
+print alt:radar.
+

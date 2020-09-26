@@ -121,12 +121,22 @@ FUNCTION EXECUTEMANOEUVRE{
 
         IF STAGEREQUIRED{
             IF CHECKSTAGEREQUIRED() AND GETNUMBEROFINACTIVEENGINES()>=1{
-                STAGE.
-                WAIT 0.1.
-                //UPDATE VARIOUS VALUES
-                IF CHECKFORACTIVEENGINE(){ //ENGINE MUST BE ACTIVE TO ALLOW NEW VALUES TO BE FOUND.
-                    SET THRUST TO GETCURRENTMAXTHRUST().
-                    SET ISP TO GETISPOFCURRENTENGINES().
+                local loops is 1.
+                UNTIL loops = 0{
+                    SET loops TO loops - 1.
+                    STAGE.
+                    WAIT 0.5.
+                    //UPDATE VARIOUS VALUES
+                    IF CHECKFORACTIVEENGINE(){ //ENGINE MUST BE ACTIVE TO ALLOW NEW VALUES TO BE FOUND.
+                        SET THRUST TO GETCURRENTMAXTHRUST().
+                        SET ISP TO GETISPOFCURRENTENGINES().
+                        IF ISP = "NULL"{
+                            PRINT("No active engines found.").
+                            SET loops TO loops + 1.
+                        }
+                    }ELSE{
+                        PRINT("No active engines found.").
+                    }
                 }
             }
         }

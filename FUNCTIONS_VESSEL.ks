@@ -93,7 +93,12 @@ FUNCTION GETISPOFCURRENTENGINES{
             SET MSUM TO MSUM + MASSFLOWRATE.
         }
     }
-    LOCAL ISP1 IS ISPMSUM/MSUM.
+
+    IF engineList:length > 0{
+        SET ISP1 TO ISPMSUM/MSUM.
+    }ELSE{
+        SET ISP1 TO "NULL".
+    }
 
     RETURN ISP1.
 }

@@ -51,21 +51,14 @@ FUNCTION RUNFUNCTIONS{
 	RUN FUNCTIONS_VESSEL.KS.
 }
 
-//check ship status.
-if ship:status = "PRELAUNCH"{
+//update software if possible, and make it available.
+if homeConnection:isconnected{
 	UPDATEALL().
-}
-
-//load all functions for later use.
-RUNFUNCTIONS().
-
-if ship:status <> "PRELAUNCH" AND CHECKHOMECONNECTION(){
-  	UPDATEALL().
+	RUNFUNCTIONS().
+}ELSE{
 	RUNFUNCTIONS().
 }
 
-//CLEARALLNODES().
 PRINT "BOOTSCRIPT COMPLETE, RUNNING VESSEL FILE.".
 LOCAL FILENAME IS SHIP:NAME + ".ks".
 RUNPATH("1:/" + FILENAME).
-//MAY WANT TO RUN FUNCTIONS AND DO STARTUP IN HERE... or may not... may want ship specific boot files... not all ships need same functions.

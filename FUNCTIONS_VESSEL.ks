@@ -48,6 +48,49 @@ FUNCTION CHECKSTAGEREQUIRED{
   //SOMETHING ABOUT STAGE.READY.  CHECK THIS, COULD MAKE IMPROVEMENTS HERE.  EP3
 }
 
+FUNCTION doStage{
+    //This function performs the staging safely.
+    //We assume that staging is required by the 
+    //time this function is called.
+  
+    LOCAL attempts IS 0.
+    LOCAL stageComplete IS False.
+
+    //Implement workaround for weird staging bug.
+    IF NOT checkStageIntegrity(){
+        UNTIL STAGE:READY{
+            WAIT 0.
+        }
+        STAGE.
+        WAIT 0.1.
+    }
+
+
+    UNTIL (attempts = 5) OR (stageComplete = True){
+        PRINT("Waiting for stage...").
+        UNTIL STAGE:READY{
+            WAIT 0.
+        }
+        PRINT("Staging...").
+        STAGE.
+        WAIT 0.1.
+        SET attempts TO attempts + 1.
+        LOCAL integrity IS checkStageIntegrity().
+        LOCAL activeEng IS CHECKFORACTIVEENGINE().
+        IF (integrity = True) AND (activeEng = True){
+            SET stageComplete TO True.
+        }
+    }
+
+    IF (attempts = 5) AND (stageComplete = False){
+        PRINT("Staging failed.").
+    }
+    IF stageComplete{
+        PRINT("Staging successful.").
+    }
+    RETURN stageComplete.
+}
+
 
 FUNCTION GETCURRENTSTAGEDELTAV{//THis function needs fixing!!! not dealing with resources properly I think
     //FIND THE DELTA V OF THE CURRENT STAGE.
@@ -88,6 +131,7 @@ FUNCTION GETISPOFCURRENTENGINES{
     LOCAL MASSFLOWRATE IS 0.
     FOR ENG IN ENGINELIST {
         IF ENG:IGNITION{
+            print("max thrust is " + ENG:MAXTHRUST).
             SET MASSFLOWRATE TO (ENG:MAXTHRUST*1000)/(9.81*ENG:ISP).
             SET ISPMSUM TO ISPMSUM + ENG:ISP*MASSFLOWRATE.
             SET MSUM TO MSUM + MASSFLOWRATE.
@@ -132,4 +176,25 @@ FUNCTION QUERYVESSEL{
 
 
   RETURN PARTLIST.
+}
+
+FUNCTION checkStageIntegrity{
+    //Sometimes the stage light will flash green and there
+    //are no resources on the current stage.  If this happens,
+    //one must stage.  I think.
+    LOCAL integrity IS True.
+
+    LOCAL finished IS False.
+    LIST ENGINES IN ENGINELIST.
+    FOR ENG IN ENGINELIST{
+        IF ENG:FLAMEOUT{
+            SET finished TO True.
+        }
+    }
+
+    IF getCurrentMaxThrust() = 0 AND finished = False{
+        SET integrity TO False.
+    }
+    PRINT("Stage integrity:  " + integrity).
+    return integrity.
 }

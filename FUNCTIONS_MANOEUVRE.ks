@@ -68,9 +68,25 @@ FUNCTION WARPTOMANOEUVRE{
     //burntime comes out different to what game says because game estimates.
     LOCAL BURNTIME IS GETBURNTIME(M1:DElTAV:MAG, ISP, THRUST, THROT).
 
+    PRINT "POINTING ALONG BURN VECTOR".
+    SAS OFF.
+    WAIT 1.
+    LOCAL MANOEUVREDIRECTION IS M1:BURNVECTOR.
+    LOCK STEERING TO MANOEUVREDIRECTION.
 
-    SET WARPMODE TO "RAILS".
-    WARPTO(TIME:SECONDS + M1:ETA - 60 - (BURNTIME/2)).
+    UNTIL (M1:ETA < (60 + BURNTIME/2)) OR (vAng(M1:BURNVECTOR, SHIP:FACING:VECTOR) < 2){
+        WAIT 1.
+    } 
+
+    PRINT("Finished waiting to rotate.").
+
+    IF M1:ETA > (60 + (BURNTIME/2)){
+        PRINT("WARPING...").
+        SET WARPMODE TO "RAILS".
+        WARPTO(TIME:SECONDS + M1:ETA - 60 - (BURNTIME/2)).
+    }
+
+    
 }
 
 
@@ -85,10 +101,10 @@ FUNCTION EXECUTEMANOEUVRE{
     LOCAL THROT IS 1.
     //burntime comes out different to what game says because game estimates.
     LOCAL BURNTIME IS GETBURNTIME(M1:DElTAV:MAG, ISP, THRUST, THROT).
-    print "BURNTIME:  ".
+    print "Burn duration:  ".
     PRINT BURNTIME.
     //Point in direction of burn.
-    PRINT "POINTING ALONG BURN VECTOR".
+    PRINT "Orienting vessel...".
     SAS OFF.
     WAIT 1.
     LOCAL MANOEUVREDIRECTION IS M1:BURNVECTOR.
@@ -121,23 +137,26 @@ FUNCTION EXECUTEMANOEUVRE{
 
         IF STAGEREQUIRED{
             IF CHECKSTAGEREQUIRED() AND GETNUMBEROFINACTIVEENGINES()>=1{
-                local loops is 1.
-                UNTIL loops = 0{
-                    SET loops TO loops - 1.
-                    STAGE.
-                    WAIT 0.5.
-                    //UPDATE VARIOUS VALUES
-                    IF CHECKFORACTIVEENGINE(){ //ENGINE MUST BE ACTIVE TO ALLOW NEW VALUES TO BE FOUND.
-                        SET THRUST TO GETCURRENTMAXTHRUST().
-                        SET ISP TO GETISPOFCURRENTENGINES().
-                        IF ISP = "NULL"{
-                            PRINT("No active engines found.").
-                            SET loops TO loops + 1.
-                        }
-                    }ELSE{
-                        PRINT("No active engines found.").
-                    }
-                }
+                doStage().
+                SET THRUST TO GETCURRENTMAXTHRUST().
+                SET ISP TO GETISPOFCURRENTENGINES().
+                // local loops is 1.
+                // UNTIL loops = 0{
+                //     SET loops TO loops - 1.
+                //     STAGE.
+                //     WAIT 0.5.
+                //     //UPDATE VARIOUS VALUES
+                //     IF CHECKFORACTIVEENGINE(){ //ENGINE MUST BE ACTIVE TO ALLOW NEW VALUES TO BE FOUND.
+                //         SET THRUST TO GETCURRENTMAXTHRUST().
+                //         SET ISP TO GETISPOFCURRENTENGINES().
+                //         IF ISP = "NULL"{
+                //             PRINT("No active engines found.").
+                //             SET loops TO loops + 1.
+                //         }
+                //     }ELSE{
+                //         PRINT("No active engines found.").
+                //     }
+                // }
             }
         }
         IF TIMELEFT < 5 AND CORRECTION1MADE = FALSE{
@@ -242,9 +261,6 @@ FUNCTION ABORTNOW{
 }
 
 
-Function abort{
-
-}
 
 Function MonitorForManoeuvres{
     PARAMETER N. //number of manoeuvres to monitor for.
@@ -267,12 +283,6 @@ Function MonitorForManoeuvres{
     }
 }
 
-Function Land{
-    PARAMETER TARGETWAYPOINT.
-    //commencing deorbit burn
-    //commencing horizontal velocity cancelling burn
-    //commencing landing burn
-}
 
 function GetRadius{
     parameter BodyName.

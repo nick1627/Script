@@ -1,0 +1,2 @@
+PARAMETER origin.
+PARAMETER destination.

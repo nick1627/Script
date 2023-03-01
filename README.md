@@ -1,2 +1,2 @@
 # Script
-This is my KSP kOS code repository.  It's not particularly amazing... yet.
+This is my kOS code repository for Kerbal Space Program.
